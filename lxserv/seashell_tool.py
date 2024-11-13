@@ -1,4 +1,4 @@
-#python
+#!python
 
 '''
 
@@ -10,7 +10,6 @@
 import lx
 import lxifc
 import lxu.attributes
-import lxu.vector
 from lxifc import UIValueHints, Visitor
 
 import seashell
@@ -30,9 +29,10 @@ ATTR_VROT = DynamicAttribute('vrot',   8)
 ATTR_NAME = DynamicAttribute('name',   9)
 
 class Seashell_Tool(lxifc.Tool, lxifc.ToolModel, lxu.attributes.DynamicAttributes):
+
     def __init__(self):
         lxu.attributes.DynamicAttributes.__init__(self)
-    
+
         self.dyna_Add(ATTR_AXIS.name, lx.symbol.sTYPE_AXIS)
         self.dyna_Add(ATTR_NREP.name, lx.symbol.sTYPE_INTEGER)
         self.dyna_Add(ATTR_NSID.name, lx.symbol.sTYPE_INTEGER)
@@ -54,18 +54,24 @@ class Seashell_Tool(lxifc.Tool, lxifc.ToolModel, lxu.attributes.DynamicAttribute
         self.attr_SetFlt (ATTR_VWRP.index, seashell.Settings.vwrp)
         self.attr_SetInt (ATTR_VROT.index, seashell.Settings.vrot)
         self.attr_SetString (ATTR_NAME.index, seashell.Settings.name)
-    
+
         pkt_svc = lx.service.Packet()
         self.vec_type = pkt_svc.CreateVectorType(lx.symbol.sCATEGORY_TOOL)
         pkt_svc.AddPacket(self.vec_type, lx.symbol.sP_TOOL_VIEW_EVENT, lx.symbol.fVT_GET)
 
-    def tool_Reset(self):
-        self.attr_SetInt(0,1)
+    def tool_Reset (self):
+        self.attr_SetInt (ATTR_AXIS.index, 1)
+        self.attr_SetInt (ATTR_NREP.index, 4)
+        self.attr_SetInt (ATTR_NSID.index, 20)
+        self.attr_SetInt (ATTR_OFF.index, 1)
+        self.attr_SetFlt (ATTR_SCL.index, 0.6)
+        self.attr_SetInt (ATTR_TXUV.index, True)
+        self.attr_SetFlt (ATTR_UWRP.index, 0.2)
+        self.attr_SetFlt (ATTR_VWRP.index, 1.0)
+        self.attr_SetInt (ATTR_VROT.index, False)
+        self.attr_SetString (ATTR_NAME.index, 'Texture')
 
-    def tool_Evaluate(self, vts):
-        '''
-            Get all attributes
-        '''
+    def tool_Evaluate(self,vts):
         seashell.Settings.axis = self.attr_GetInt(ATTR_AXIS.index)
         seashell.Settings.nrep = self.attr_GetInt(ATTR_NREP.index)
         seashell.Settings.nsid = self.attr_GetInt(ATTR_NSID.index)
@@ -80,7 +86,6 @@ class Seashell_Tool(lxifc.Tool, lxifc.ToolModel, lxu.attributes.DynamicAttribute
         layer_svc = lx.service.Layer()
         mesh_svc = lx.service.Mesh()
 
-        print(f"** tool_Evaluate axis{seashell.Settings.axis} nrep{seashell.Settings.nrep}")
         '''
             Start the scan in edit-poly mode.
         '''
@@ -135,13 +140,25 @@ class Seashell_Tool(lxifc.Tool, lxifc.ToolModel, lxu.attributes.DynamicAttribute
         layer_scan.Apply()
 
     def tool_VectorType(self):
+        '''
+            This function simply returns the tool VectorType that we created
+            in the constructor.
+        '''
         return self.vec_type
 
     def tool_Order(self):
-         return lx.symbol.s_ORD_ACTR
+        '''
+            This sets the position of the tool in the toolpipe.
+        '''
+        return lx.symbol.s_ORD_ACTR
 
-    def tool_Task():
-         return lx.symbol.i_TASK_ACTR
+    def tool_Task(self):
+        '''
+            Simply defines the type of task performed by this tool. We set
+            this to an Action tool, which basically means it will alter the
+            state of modo.
+        '''
+        return lx.symbol.i_TASK_ACTR
 
     def tmod_Flags(self):
         '''
@@ -152,14 +169,7 @@ class Seashell_Tool(lxifc.Tool, lxifc.ToolModel, lxu.attributes.DynamicAttribute
         return lx.symbol.fTMOD_I0_ATTRHAUL
 
     def tmod_Initialize(self,vts,adjust,flags):
-        '''
-            This is called when the tool is activated. We use it to simply
-            set the attribute that we hauling back to the default.
-        '''
-        adj_tool = lx.object.AdjustTool(adjust)
-        axis = self.attr_GetInt(ATTR_AXIS.index)
-        print(f"** tmod_Initialize axis{axis}")
-        adj_tool.SetInt(ATTR_AXIS.index, axis)
+    	pass
 
     def tmod_Haul(self,index):
         '''
@@ -206,7 +216,6 @@ class Seashell_Tool(lxifc.Tool, lxifc.ToolModel, lxu.attributes.DynamicAttribute
         '''
             Return false if there is no polygons in any active layers.
         '''
-        print(f"** selected polygons {ok}")
         return ok
 
     def tmod_Enable(self, msg):
@@ -216,23 +225,21 @@ class Seashell_Tool(lxifc.Tool, lxifc.ToolModel, lxu.attributes.DynamicAttribute
             return lx.symbol.e_DISABLED
         return lx.symbol.e_OK
 
-    def atrui_UIHints2(self,index, hints):
+    def arg_UIHints(self, index, hints):
         if index == ATTR_NREP.index or index == ATTR_NSID.index or index == ATTR_OFF.index:
             hints.MinInt(1)
 
-
-    def atrui_Enabled(self,index,msg):
-        if index == ATTR_UWRP.index or index == ATTR_VWRP.index or index == ATTR_VROT.index:
+    def arg_DisableMsg(self,index,msg):
+        if index == ATTR_UWRP.index or index == ATTR_VWRP.index or index == ATTR_VROT.index or index == ATTR_NAME.index:
             uvs = self.attr_GetInt(ATTR_TXUV.index)
             if uvs == False:
                 msg.SetMessage("mesh.seashell", "NeedMakeUVs", 0)
                 lx.throw (lx.symbol.e_CMD_DISABLED)
-                return False
-        return True
-
+                return lx.symbol.e_CMD_DISABLED
+        return lx.symbol.e_OK
 
 '''
     "Blessing" the class promotes it to a fist class server. This basically
-    means that modo will now recognize this plugin script as a command plugin.
+    means that modo will now recognize this plugin script as a tool plugin.
 '''
 lx.bless(Seashell_Tool, "seashell.tool")
