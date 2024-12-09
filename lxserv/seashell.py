@@ -11,7 +11,7 @@ class Settings(object):
     axis = 1
     nrep = 4
     nsid = 20
-    off = 1
+    off = 1.0
     uvs = True
     uwrp = 0.2
     vwrp = 1.0

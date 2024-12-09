@@ -7,12 +7,16 @@ This is a collection of Python example for Foundry 3DCG application Modo plugin.
 </div>
 
 ## Modo plug-ins
-- **sseashll.command**:
+- **seashell.command**:
 This is a modeling command version of seashell. It takes profile polygons and creates a seashell shape with the given attributes. You can use this by typing "**seashell.command**" at command field of Command History viewport.
-- **sseashll.meshop.item**:
+- **seashell.meshop.item**:
 This is a mesh modifier version of seashell for procedural modeling workflow. This is available on Mesh Operator viewport under Polygon tab.
-- **sseashll.tool**:
+- **seashell.tool**:
 This is a direct tool version of seashell. It takes profile polygons and creates a seashell shape with the given attributes. You can use this by typing "**tool.set seashell.tool on**" at command field of Command History viewport.
+
+## Blender Operator
+- **bmesh_seashell.py**
+This is a Blender operator version of seashell. It takes profile polygons and creates a seashell shape with the given attributes. You can use this by typing "**bpy.ops.mesh.seashell()**" at Python console.
 
 ## Installing
 - Open user context folder by choosing "**Open Content Folder**" under System menu of Modo.
